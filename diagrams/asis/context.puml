@@ -1,0 +1,19 @@
+@startuml ASIS_WarmhouseContext
+title [ASIS]WarmhouseContext
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Person(user, "User", "Клиент Warmhouse")
+Person(admin, "Administrator", "Администратор, принимающий заявки на подключение")
+Person(serviceman, "Serviceman", "Установщик системы. Производит подключение клиентов и регистрацию датчиков")
+
+System(warmhouse, "Warmhouse System", "Система управления и мониторинга тепловыми устройствами")
+System_Ext(sensor, "Датчики системы отопления")
+
+Rel(user, admin, "Запрос на подключение")
+Rel(admin, serviceman, "Направление мастера для подключения")
+Rel(serviceman, sensor, "Настройка датчика для работы с системой")
+Rel(serviceman, warmhouse, "Регистрация датчика")
+Rel(sensor, warmhouse, "Отправка данных, выставление температуры")
+Rel(user, warmhouse, "Получение данных о текущей температуре, выставление температуры")
+
+@enduml
