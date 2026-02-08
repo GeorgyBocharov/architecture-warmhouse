@@ -99,6 +99,13 @@
 
 **Диаграмма компонентов (Components)**
 
+[path](diagrams\tobe\component\bff.puml)
+![BFF C3 TOBE Diagram](diagrams\tobe\component\bff.puml)
+
+[path](diagrams\tobe\component\user_profile.puml)
+![User Profile C3 TOBE Diagram](diagrams\tobe\component\user_profile.puml)
+
+
 Добавьте диаграмму для каждого из выделенных микросервисов.
 
 **Диаграмма кода (Code)**

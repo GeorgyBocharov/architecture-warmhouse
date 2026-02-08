@@ -1,0 +1,31 @@
+@startuml UserProfile Component
+title UserProfile Component Diagram
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+
+Container(notificationService, "Notification Service", "Go", "Checks user's data & settings to send notifications")
+Container(bff, "BFF", "Go", "Backend For Mobile App Frontend")
+Container(userProfile, "UserProfile", "Go", "Handles user interactions")
+Container(Database, "UserProfileDB", "PostgreSQL", "Stores user data and settings")
+
+
+Container(userProfile, "UserProfile") {
+  Component(UserProfileController, "UserProfileController", "Manages profile storage")
+  Component(UserSettingsController, "SettingsController", "Manages user settings")
+  Component(ServiceLayer, "Service Layer", "Business logic")
+  Component(RepositoryLayer, "Repository Layer", "Data access logic")
+}
+
+
+Rel(notificationService, UserSettingsController, "Get notifications config")
+Rel(bff, UserProfileController, "UserProfile management calls")
+Rel(bff, UserSettingsController, "UserProfile settings management calls")
+Rel(UserProfileController,ServiceLayer,"Calls business logic")
+Rel(UserProfileController,ServiceLayer,"Calls business logic")
+Rel(UserSettingsController,ServiceLayer,"Calls business logic")
+Rel(ServiceLayer,RepositoryLayer,"Reads/Writes data")
+Rel(RepositoryLayer,Database,"Reads/Writes user data")
+@enduml

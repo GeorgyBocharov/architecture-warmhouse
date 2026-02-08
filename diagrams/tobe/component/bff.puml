@@ -1,0 +1,87 @@
+@startuml BFF  Mobile Component
+title BFF  Mobile Component Diagram
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+
+Container(mobileApp, "UserProfile", "Swift, Kotlin", "Handles user interactions")
+Container(supportWeb, "SupportWeb", "Node.js", "Support management ui")
+
+
+Container(bff, "BFF Mobile", "Go") {
+    Component(UserController, "UserController", "Go", "Manages user-data & setttings")
+    Component(DeviceController, "SettingsController", "Go", "Manages user settings")
+    Component(OrderController, "OrderController", "Go", "Manages orders")
+    Component(AppealsController, "AppealsController", "Manages appeals of users and for support")
+    Component(VendorIntegrationController, "Vendor Integration Controller", "Manages storage vendor's token")
+   
+    Component(ServiceLayer, "Service Layer", "Go", "Business logic")
+   
+    Component(DeviceAdapter, "DeviceAdapter", "Go", "Adapts and aggregates devices' data")
+    Component(AutomatizationAdapter, "AutomatizationAdapter", "Go", "Manages device automatization")
+    Component(DeviceCommand, "Device Command Adapter", "Go", "Adapts and aggregates devices' data")
+    Component(UserProfileAdapter, "User Prifle Adapter", "Go", "Save User Profile")
+    Component(AppealsAdapter, "ApealsAdapter", "Go", "CreateAppeals")
+    Component(VendorAdapter, "VendorAdapter", "Go", "Manage Vendors Integrations")
+    Component(OrdersAdapter, "OrdersAdapter", "Go", "Manage Orders")
+
+    Component(DeviceDataRepository, "DeviceDataRepository", "Go")
+}
+
+ContainerDb(telemetryCache, "Telemetry Cache", "Redis", "Get device data")
+Container(deviceCommandsQueue, "Device Command Message Bus", "Kafka")
+
+Container(telemetryService, "Telemetry Service", "Go", "Devices telemetry")
+Container(deviceCatalog, "Device Catalog", "Go", "Available devices catalog")
+Container(deviceInventory, "Device Inventory", "Go", "Manage user devices")
+Container(deviceAudit, "Device Audit", "Go", "Get audit for user commands")
+Container(automatizationService, "Automatization Service", "Go", "Manages automatization")
+Container(userProfile, "User Profile", "Go", "Manage user data & settings")
+Container(orderService, "Order Service", "Go", "Manage orders")
+Container(vendorIntegrationService, "Vendor Integration", "Go", "store vendor's token")
+
+
+Rel(mobileApp, UserController, "Save & Process userData")
+Rel(mobileApp, DeviceController, "Manage Devices, get Data, setup automatizations")
+Rel(mobileApp, AppealsController, "Create & solve appeals")
+Rel(mobileApp, OrderController, "Create orders")
+Rel(mobileApp, VendorIntegrationController, "Auth for vendor")
+Rel(supportWeb, AppealsController, "Check appeals")
+
+Rel(UserController, ServiceLayer,"Calls business logic")
+Rel(DeviceController, ServiceLayer,"Calls business logic")
+Rel(OrderController, ServiceLayer,"Calls business logic")
+Rel(AppealsController, ServiceLayer,"Calls business logic")
+Rel(VendorIntegrationController, ServiceLayer,"Calls business logic")
+
+
+Rel(ServiceLayer, DeviceAdapter, "Get device info")
+Rel(ServiceLayer, DeviceDataRepository, "Get device data")
+Rel(DeviceDataRepository, telemetryCache, "Get device telemetry")
+Rel(ServiceLayer, DeviceCommand, "Send commands to device")
+Rel(DeviceCommand, deviceCommandsQueue,"Send commands to device") 
+
+Rel(ServiceLayer, VendorAdapter, "Manage vender auth")
+Rel(VendorAdapter, vendorIntegrationService, "Manage vender auth")
+
+
+
+Rel(ServiceLayer, OrdersAdapter, "Manage orders")
+Rel(OrdersAdapter, orderService, "Manage orders")
+
+
+Rel(ServiceLayer, UserProfileAdapter, "Manage user profile & settings")
+Rel(UserProfileAdapter, userProfile, "Manage user profile & settings")
+
+Rel(ServiceLayer, AutomatizationAdapter, "Manage automatizations")
+Rel(AutomatizationAdapter, automatizationService, "ManageAutomatization")
+
+Rel(DeviceAdapter, deviceInventory, "Manage user devices")
+Rel(DeviceAdapter, telemetryService, "Get device telemetry stats")
+Rel(DeviceAdapter, deviceCatalog, "Get available devices")
+Rel(DeviceAdapter, deviceAudit, "Audit commands")
+
+
+@enduml
