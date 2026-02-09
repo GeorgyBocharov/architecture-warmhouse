@@ -99,21 +99,24 @@
 
 **Диаграмма компонентов (Components)**
 
-[path](diagrams\tobe\component\bff.puml)
-![BFF C3 TOBE Diagram](diagrams\tobe\component\bff.puml)
+[path](diagrams\generated\component\BFF  Mobile Component.png)
+![BFF C3 TOBE Diagram](diagrams\generated\component\BFF  Mobile Component.png)
 
-[path](diagrams\tobe\component\user_profile.puml)
-![User Profile C3 TOBE Diagram](diagrams\tobe\component\user_profile.puml)
+[path](diagrams\generated\component\UserProfile Component.png)
+![User Profile C3 TOBE Diagram](diagrams\generated\component\UserProfile Component.png)
 
-[path](diagrams\tobe\component\automation.puml)
-![Automation Service C3 TOBE Diagram](diagrams\tobe\component\automation.puml)
+[path](diagrams\generated\component\AutomationService Component.png)
+![Automation Service C3 TOBE Diagram](diagrams\generated\component\AutomationService Component.png)
+
+[path](diagrams\generated\component\DeviceAdapter Component.png)
+![Automation Service C3 TOBE Diagram](diagrams\generated\component\DeviceAdapter Component.png)
 
 
 
 **Диаграмма кода (Code)**
 
-[path](diagrams\tobe\code\automation.puml)
-![Automation Service C4 TOBE Diagram](diagrams\tobe\code\automation.puml)
+[path](diagrams\generated\code\automation.png)
+![Automation Service C4 TOBE Diagram](diagrams\generated\code\automation.png)
 
 # Задание 3. Разработка ER-диаграммы
 
