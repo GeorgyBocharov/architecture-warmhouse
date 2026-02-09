@@ -1,0 +1,77 @@
+@startuml AutomationService Component
+title AutomationService Component Diagram
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+
+Container(bff, "BFF", "Go", "Entrypoint")
+Container(device_command_message_bus, "Device Command Message Bus", "Kafka")
+Container(device_data_message_bus, "Device Data Message Bus", "Kafka")
+ContainerDb(automation_db, "Automation DB", "PostreSQL", "Automation data")
+ContainerDb(telemetry_cache, "Telemetry Cache", "Redis", "Cached current device data")
+Container(scenario_events_message_bus, "Scenario Events Message Bus", "Kafka", "Scenario events")
+
+
+Container_Boundary(automation, "AutomationService") {
+    Component(AutomationController, "AutomationController", "Manage automations")
+    'Service layer
+    Component(ScenarioOrchestrator, "ScenarioOrchestrator", "Service to control automation lifecycle")
+    Component(TimeTriggerEventsProcessor, "TimeTriggerEventsProcessor", "Sends notifiaction to check process state at specific time")
+    Component(DeviceEventsProcessor, "DeviceEventsProcessor", "Checks events and sends notifications to process")
+    'Data layer
+    together {
+        Component(DeviceConditionRepository, "DeviceConditionRepository", "Manage conditions, based on other devices")
+        Component(TimeConditionRepository, "TimeConditionRepository", "Manage conditions, based on time")
+        Component(ScenarioRepository, "ScenarioRepository", "Manage scenario")
+        Component(RedisDeviceStateRepository, "RedisDeviceStateRepository", "Get current device state")
+    }
+    'Adapters
+
+    together{
+        Component(KafkaDeviceStateAdapter, "KafkaDeviceStateAdapter", "Receive current state of devices")
+        Component(KafkaScenarioEventsReceiveAdapter, "KafkaScenarioEventsReceiveAdapter", "Receive events for scenario")
+    }
+
+    together {
+        Component(KafkaDeviceCommandAdapter, "KafkaDeviceCommandAdapter", "Adapt and send commands to devices")
+        Component(KafkaScenarioEventsSendAdapter, "KafkaScenarioEvents Send Adapter", "Send events for scenario")
+    }
+}
+
+
+Rel_D(bff, AutomationController, "Manage automations")
+Rel(AutomationController, ScenarioOrchestrator, "Manage automations")
+
+'ScenarioOrchestrator Relations
+Rel(ScenarioOrchestrator, TimeTriggerEventsProcessor, "Schedule timing conditions check")
+Rel(ScenarioOrchestrator, DeviceEventsProcessor, "Register device conditions")
+
+Rel(ScenarioOrchestrator, ScenarioRepository, "Manage scenarios")
+Rel(ScenarioOrchestrator, RedisDeviceStateRepository, "Get current device state")
+
+Rel(ScenarioOrchestrator, KafkaDeviceCommandAdapter, "Adapt and send commands to devices")
+Rel(KafkaScenarioEventsReceiveAdapter, ScenarioOrchestrator, "Handle scenario events")
+'TimeTriggerEventsProcessor Relations
+Rel(TimeTriggerEventsProcessor, TimeConditionRepository, "Manage conditions")
+Rel(TimeTriggerEventsProcessor, KafkaScenarioEventsSendAdapter, "Send timing passed events")
+'DeviceEventsProcessor Relations
+Rel(KafkaDeviceStateAdapter, DeviceEventsProcessor, "Receive device state events")
+Rel(DeviceEventsProcessor, DeviceConditionRepository, "Check device conditions")
+Rel(DeviceEventsProcessor, KafkaScenarioEventsSendAdapter, "Send device condition passed events")
+
+'Adapters
+Rel(KafkaScenarioEventsSendAdapter, scenario_events_message_bus, "Sends events for scenarios")
+Rel(KafkaDeviceCommandAdapter, device_command_message_bus, "Send commands to devices")
+Rel(device_data_message_bus, KafkaDeviceStateAdapter, "Receive current device state")
+Rel(scenario_events_message_bus, KafkaScenarioEventsReceiveAdapter, "Receive scenario events")
+
+'Repositories
+BiRel(DeviceConditionRepository, automation_db, "Manage device conditions")
+BiRel(TimeConditionRepository, automation_db, "Manage time conditions")
+BiRel(ScenarioRepository, automation_db, "Manage process conditions")
+Rel(RedisDeviceStateRepository, telemetry_cache, "Get current device state")
+
+
+@enduml

@@ -105,12 +105,15 @@
 [path](diagrams\tobe\component\user_profile.puml)
 ![User Profile C3 TOBE Diagram](diagrams\tobe\component\user_profile.puml)
 
+[path](diagrams\tobe\component\automation.puml)
+![Automation Service C3 TOBE Diagram](diagrams\tobe\component\automation.puml)
 
-Добавьте диаграмму для каждого из выделенных микросервисов.
+
 
 **Диаграмма кода (Code)**
 
-Добавьте одну диаграмму или несколько.
+[path](diagrams\tobe\code\automation.puml)
+![Automation Service C4 TOBE Diagram](diagrams\tobe\code\automation.puml)
 
 # Задание 3. Разработка ER-диаграммы
 
