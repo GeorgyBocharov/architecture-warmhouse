@@ -1,6 +1,0 @@
-@startuml test
-!include /Users/gmbocharov/Documents/архитектура/plantumlC4/C4_Context.puml
-!include /Users/gmbocharov/Documents/архитектура/plantumlC4/C4_Container.puml
-!include /Users/gmbocharov/Documents/архитектура/plantumlC4/C4_Component.puml
-!include /Users/gmbocharov/Documents/архитектура/plantumlC4/C4_Code.puml
-@enduml GeorgyBocharov/architecture-warmhouse/apps/test.plantuml
