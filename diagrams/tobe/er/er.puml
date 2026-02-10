@@ -1,0 +1,153 @@
+@startuml
+
+entity User {
+  * user_id : UUID
+  --
+  username : VARCHAR
+  email : VARCHAR
+}
+
+entity House {
+  * id : NUMBER
+  --
+  address : VARCHAR
+  name: VARCHAR
+}
+
+entity Device {
+  * id : UUID
+  --
+  type: VARCHAR
+  name: VARCHAR
+  user_id: UUID
+  house_id: NUMBER
+  room: VARCHAR
+  is_turned_on: BOOL
+}
+
+entity AutomationScenario {
+     * id : UUID
+     --
+     user_id: UUID
+}
+
+entity AutomationStep {
+    * id : NUMBER
+    --
+    order: NUMBER
+    scenario_id: UUID
+}
+
+entity TimeCondition {
+    * id : NUBMER
+    --
+    step_id: NUMBER
+    time_before: TIMESTAMP
+    time_after: TIMESTAMP
+}
+
+entity DeviceCondition {
+    * id : NUBMER
+    --
+    step_id: NUMBER
+    device_id: UUID
+    value_type: VARCHAR
+    value: NUMBER
+}
+
+entity DeviceCommand {
+     * id : UUID
+     --
+     timestamp TIMESTAMP
+     user_id UUID
+     deviceAction DeviceAction
+}
+
+entity DeviceAction {
+    device_id UUID
+    action_type VARCHAR
+    value NUMBER
+}
+
+entity UserAuditReport {
+    * id NUMBER
+    --
+    user_id UUID
+}
+
+entity DeviceState {
+    * id NUMBER
+    --
+    device_id UUID
+    time TIMESTAMP
+    telemetry: MAP<VARCHAR, NUMBER>
+}
+
+entity DeviceTelemetry {
+    * id NUMBER
+    --
+    device_id UUID
+}
+
+entity Order {
+  * order_id : NUMBER
+  --
+  user_id : NUMBER
+  order_date : DATE
+  total : DECIMAL
+}
+
+entity Product {
+  * product_id : NUMBER
+  --
+  name : VARCHAR
+  price : DECIMAL
+}
+
+
+entity IssueTicket {
+    * id: NUBMER
+    --
+    user_id: UUID
+    issue : VARCHAR
+    created_at: DATE
+    status : DATE
+    support_id: UUID
+}
+
+entity Support {
+    * id: NUBMER
+    --
+    name: VARCHAR
+}
+
+User ||--o{ House
+User ||--o{ IssueTicket
+User ||--o{ Device
+User ||--o{ AutomationScenario
+User ||--o{ Order
+User ||--o{ DeviceCommand
+User ||--o| UserAuditReport
+
+UserAuditReport ||--o{ DeviceCommand
+
+House ||--o{ Device
+
+AutomationScenario ||--{ AutomationStep
+AutomationStep ||--o{ TimeCondition 
+AutomationStep ||--o{ DeviceCondition
+AutomationStep ||--{ DeviceAction
+DeviceCommand ||--|| DeviceAction
+DeviceCondition ||--|| Device
+
+Device ||--{ DeviceState
+DeviceTelemetry ||--{ DeviceState
+Device ||--|| DeviceTelemetry
+
+Order ||--{ Product
+
+
+Support ||--o{ IssueTicket
+
+  
+@enduml

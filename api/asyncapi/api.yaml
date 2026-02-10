@@ -1,0 +1,97 @@
+asyncapi: '3.0.0'
+info:
+  title: WarmHouse Events API
+  version: 1.0.0
+
+servers:
+  mqtt:
+    host: mqtt.warmhouse.com
+    protocol: mqtt
+
+channels:
+  warmhouse.device.telemetry.events:
+    address: warmhouse.device.telemetry.events
+    description: Телеметрия устройств умного дома
+    messages:
+      deviceTelemetry:
+        $ref: '#/components/messages/DeviceTelemetry'
+
+  warmhouse.device.commands:
+    address: warmhouse.device.commands
+    description: Команда на управление устройством
+    messages:
+      deviceTelemetry:
+        $ref: '#/components/messages/DeviceCommand'
+
+  
+
+operations:
+  publishDeviceTelemetry:
+    action: send
+    channel: '#/channels/warmhouse.device.telemetry.events'
+    summary: Публикация данных устройства
+    description: Сервис telemetry-service регулярно опрашивает устройства и отправляет текущие показания
+
+  consumeDeviceTelemetry:
+    action: receive
+    channel: '#/channels/warmhouse.device.telemetry.events'
+    summary: Чтение данных устройства
+    description: Сервис automation вычитвает показания устройства и проверяет сценарии автоматизации, Сервис notifications вычитвает показания устройства и посылает уведомления пользователям. 
+
+  publishDeviceCommand:
+    action: send
+    channel: '#/channels/warmhouse.device.commands'
+    summary: Отправка команд для управления устройством
+    description: Сервис bff отправляет команду пользователя на изменение параметра устройства, Сервис automation отравляет команду в рамках автоматизации
+
+  consumeDeviceCommand:
+    action: receive
+    channel: '#/channels/warmhouse.device.commands'
+    summary: Обработка команд для управления устройством
+    description: Сервис device-adapter читает команду и передает ее на устройство
+
+
+
+components:
+  messages:
+    DeviceTelemetry:
+      name: DeviceTelemetry
+      title: Телеметрия устройства
+      summary: Сообщение с телеметрией всех датчиков устройства на фиксированный момент времени
+      contentType: application/protobuf
+      schemaFormat: application/vnd.google.protobuf;version=proto3
+      payload: |
+        syntax = "proto3";
+        package warmhouse.device.v1;
+        import "google/protobuf/timestamp.proto";
+
+        message DeviceTelemetry {
+          string device_id = 1; // required
+          repeated SensorData sensor_data = 2;
+          google.protobuf.Timestamp timestamp = 3; // required
+        }
+
+
+        message SensorData {
+          string id = 1; // required
+          string type = 2; // required
+          string unit = 3; // required
+          int64 value  = 4; // required
+        }
+
+    DeviceCommand:
+      name: DeviceCommand
+      title: Команда управления устройством
+      contentType: application/protobuf
+      schemaFormat: application/vnd.google.protobuf;version=proto3
+      payload: |
+        syntax = "proto3";
+        package warmhouse.device.v1;
+        import "google/protobuf/timestamp.proto";
+
+        message DeviceCommand {
+          string device_id = 1; // required
+          string user_id = 2; // required
+          string value_type = 3; // required
+          int64 value = 4; // required
+        }

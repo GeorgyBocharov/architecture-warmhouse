@@ -1,0 +1,261 @@
+openapi: 3.1.0
+info:
+  title: WarmHouse Telemetry API
+  version: 1.0.0
+  description: API для получения телеметрии устройств умного дома
+
+servers:
+  - url: https://api.warmhouse.com/v1
+    description: Production API
+
+paths:
+  /telemetry/devices/{device_id}:
+    get:
+      operationId: getDeviceTelemetry
+      summary: Получить телеметрию устройства
+      description: Возвращает телеметрию устройства за указанный период.
+        
+      security:
+        - bearerAuth: []
+      
+      parameters:
+        - name: device_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        
+        - name: start_time
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+          description: Начало периода в формате ISO 8601
+          example: "2024-01-15T00:00:00Z"
+        
+        - name: end_time
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+          description: Конец периода в формате ISO 8601
+          example: "2024-01-15T23:59:59Z"
+      
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TelemetryResponse'
+          headers:
+            X-Request-Id:
+              description: Идентификатор запроса для дебага
+              schema:
+                type: string
+        
+        '400':
+          description: Неверные параметры запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            WWW-Authenticate:
+              description: Схема аутентификации
+              schema:
+                type: string
+                example: "Bearer"
+        
+        '403':
+          description: Нет доступа к устройству
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        
+        '404':
+          description: Устройство не найдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT токен доступа.
+        
+        **Формат:** `Authorization: Bearer <token>`
+        
+      
+  schemas:
+    TelemetryResponse:
+      type: object
+      required:
+        - device
+        - time_range
+        - sensor_data
+      properties:
+        device:
+          $ref: '#/components/schemas/Device'
+        
+        time_range:
+          $ref: '#/components/schemas/TimeRange'
+        
+        sensor_data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SensorData'
+
+    Device:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        
+        name:
+          type: string
+          example: "Умный термостат"
+        
+        room_name:
+          type: string
+          nullable: true
+          example: "Гостиная"
+        
+        house:
+          $ref: '#/components/schemas/House'
+          nullable: true
+
+    House:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        
+        name:
+          type: string
+          nullable: true
+          example: "Мой дом"
+        
+        address:
+          type: string
+          nullable: true
+          example: "ул. Примерная, 123"
+
+    TimeRange:
+      type: object
+      required:
+        - start
+        - end
+      properties:
+        start:
+          type: string
+          format: date-time
+          example: "2024-01-15T00:00:00Z"
+        
+        end:
+          type: string
+          format: date-time
+          example: "2024-01-15T23:59:59Z"
+
+    SensorData:
+      type: object
+      required:
+        - id
+        - type
+        - unit
+        - data_points
+      properties:
+        id:
+          type: string
+          example: "temperature_sensor"
+        
+        type:
+          type: string
+          example: "temperature"
+        
+        unit:
+          type: string
+          example: "°C"
+        
+        data_points:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataPoint'
+
+    DataPoint:
+      type: object
+      required:
+        - timestamp
+        - value
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        
+        value:
+          type: integer
+          format: int64
+          example: 2150
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          enum:
+            - INVALID_TOKEN
+            - TOKEN_EXPIRED
+            - ACCESS_DENIED
+            - DEVICE_NOT_FOUND
+            - VALIDATION_ERROR
+            - INTERNAL_ERROR
+          example: "INVALID_TOKEN"
+        
+        message:
+          type: string
+          example: "Неверный или истекший токен"
+        
+        request_id:
+          type: string
+          description: Идентификатор запроса для обращения в поддержку
+          example: "req_123456789"
+        
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string

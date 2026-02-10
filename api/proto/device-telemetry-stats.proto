@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package warmhouse.telemetry.v1;
+
+
+import "google/protobuf/timestamp.proto";
+
+message GetTelemetryRequest {
+  string device_id = 1; // required
+  
+  google.protobuf.Timestamp start_time = 2; // required
+  google.protobuf.Timestamp end_time = 3; // optional
+  
+  repeated string sensor_ids = 4;
+
+  string user_id = 5; // required
+}
+
+
+message TelemetryResponse {
+  Device device = 1; // required
+  
+  TimeRange time_range = 2; // required
+  
+  repeated SensorData sensor_data = 3;
+  
+}
+
+message Device {
+    string id = 1; // required
+
+    string name = 2; // required
+
+    string room_name = 3; // optional
+
+    House house = 4; // optional
+
+}
+
+message House {
+    string id = 1; // required
+
+    string name = 2; // optional
+
+    string address = 3; // optional
+}
+
+message TimeRange {
+  google.protobuf.Timestamp start = 1; // required
+  google.protobuf.Timestamp end = 2; // required
+}
+
+message SensorData {
+  string id = 1; // required
+  
+  string type = 2; // required
+  
+  string unit = 3; // required
+  
+  repeated DataPoint data_points = 4;
+
+}
+
+message DataPoint {
+  google.protobuf.Timestamp timestamp = 1; // required
+  
+  int64 value = 2; // required
+}
+
+
+
+service TelemetryService {
+  // Получить статистику телеметрии устройства
+  rpc GetTelemetry(GetTelemetryRequest) returns (TelemetryResponse);
+}
