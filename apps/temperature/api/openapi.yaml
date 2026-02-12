@@ -1,0 +1,146 @@
+openapi: 3.0.3
+info: 
+  title: Temperature Tracking Service
+  description: Service for tracking temperature in different locations
+  version: 1.0.0
+
+paths:
+  /temperature:
+    get:
+      summary: Get Temperature by location
+      operationId: TemperatureByLocation
+      parameters:
+        - $ref: '#/components/parameters/location'
+      responses:
+        200:
+          description: Temperature value
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/TemperatureResponse'
+        404:
+          description: Unknown location
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Internal Service Error
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /temperature/{sensor}:
+    get:
+      summary: Get Temperature by sensor
+      operationId: TemperatureBySensor
+      parameters:
+        - $ref: '#/components/parameters/sensor'
+      responses:
+        200:
+          description: Temperature value
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/TemperatureResponse'
+        404:
+          description: Unknown location
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Internal Service Error
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  parameters:
+    location:
+      name: location
+      in: query
+      description: location of sensor
+      required: true
+      schema:
+        type: string
+    
+    sensor:
+      name: sensor
+      in: path
+      description: sensor id
+      required: true
+      schema:
+        type: string
+
+  schemas:
+    TemperatureResponse:
+      type: object
+      description: Temperature reading from sensor
+      properties:
+        value:
+          type: number
+          format: double
+          description: Temperature value
+          example: 23.5
+        unit:
+          type: string
+          description: Unit of measurement (Celsius, Fahrenheit, etc.)
+          example: "Celsius"
+        timestamp:
+          type: string
+          format: date-time
+          description: Time when temperature was recorded
+          example: "2024-01-15T14:30:00Z"
+        location:
+          type: string
+          description: Physical location of the sensor
+          example: "Living Room"
+        status:
+          type: string
+          description: Status of the temperature reading
+          enum: ["normal", "warning", "critical", "offline"]
+          example: "normal"
+        sensor_id:
+          type: string
+          description: Unique identifier of the sensor
+          example: "SENS-001"
+        sensor_type:
+          type: string
+          description: Type or model of the sensor
+          example: "DS18B20"
+        description:
+          type: string
+          description: Additional description or notes
+          example: "Main floor sensor near window"
+      required:
+        - value
+        - unit
+        - timestamp
+        - location
+        - status
+        - sensor_id
+        - sensor_type
+        - description
+    
+    ErrorResponse:
+      type: object
+      description: Error response object
+      properties:
+        code:
+          type: integer
+          description: ErrorCode
+        message:
+          type: string
+          description: Error message
+          example: "Location not found"
+        details:
+          type: string
+          description: Additional error details
+          example: "No sensor found at location: Living Room"
+      required:
+        - code
+        - message
+        - timestamp
