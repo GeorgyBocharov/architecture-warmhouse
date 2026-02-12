@@ -1,0 +1,203 @@
+@startuml
+title Warmhouse Automation Service Code Diagram
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+' API
+class AutomationController {
+    +UUID registerScenario(Scenario Scenario)
+    +List<Scenario> getScenarioesByUserID(UUID userID)
+    +void stopScenario(UUID id)
+    +void startScenario(UUID id)
+    +void deleteScenario(UUID id)
+}
+
+' DOMAIN
+class ScenarioOrchestrator {
+    -ScenarioRepository scenarioRepository
+    -DeviceStateRepository DeviceStateRepository
+    -CommandExecutor commandExecutor
+    +void registerScenario(Scenario)
+    +void stopScenario(UUID id)
+    +void startScenario(UUID id)
+    +void deleteScenario(UUID id)
+}
+
+interface ScenarioRepository {
+    +void saveScenario(Scenario Scenario)
+    +void getScenarioByStatus(String status)
+    +Scenario getScenario(UUID id)
+    +Scenario getScenarioByUser(UUID id)
+    +Porcess getScenarioByCondition(UUID id)
+}
+
+class Scenario {
+    +UUID id
+    +UUID userID
+    +List<Command> commands
+    +bool isFinite
+    +String status
+
+    +void start()
+    +void stop()
+    +String getStatus()
+}
+
+class Command {
+    +List<Action> action
+    +List<Condition> conditions
+}
+
+interface Action {
+    +UUID deviceID
+    +String deviceType
+    +void execute(CommandExecutor)
+}
+
+class CommandExecutor {
+    -commandAdapter DeviceCommandAdapter
+    +void turnOff(TurnOffAction)
+    +void turnOn(TurnOnAction)
+    +void setValue(SetValueAction)
+}
+
+class SetValueAction  {
+    -int value
+    -String valueType
+    +void execute(CommandExecutor)
+}
+
+class TurnOnAction {
+    +void execute(CommandExecutor)
+}
+
+class TurnOffAction {
+    +void execute(CommandExecutor)
+}
+
+interface Condition {
+    +UUID getID()
+    +UUID getScenarioID()
+    +bool isDone()
+}
+
+class TimeCondition {
+    -UUID id
+    -UUID ScenarioID
+    -long timeAfter
+    -long timeBefore
+
+    +long getTimeAfter()
+    +long getTimeBefore()
+    +bool isDone()
+    +UUID getID()
+    +UUID getScenarioID()
+    +Condition reversed()
+}
+
+class DeviceCondition {
+    -UUID id
+    -UUID deviceID
+    -int value
+    -String valueType
+
+    +int getValue()
+    +String getValueType()
+    +bool isDone()
+    +UUID getID()
+    +Condition reversed()
+}
+
+' PROCESSORS
+class DeviceEventsProcessor {
+  -DeviceConditionRepository conditionRepo
+  -ScenarioEventAdapter scenarioEventAdapter
+
+  
+  +void processEvent(deviceEvent)
+  -List<DeviceCondition> getDeviceConditions(UUID deviceID)
+}
+
+class TimeTriggerProcessor {
+  -TimeConditionRepository timeConditionRepository
+  -ScenarioEventAdapter scenarioEventAdapter
+  
+  +void registerTrigger(TimeCondition trigger)
+  +void cancelTrigger(triggerID)
+}
+
+interface DeviceConditionRepository {
+    +void saveCondition(DeviceCondition condition)
+    +void deleteCondition(UUID)
+    +List<DeviceCondition> getExceededConditions(long time)
+}
+
+interface TimeConditionRepository {
+    +void saveCondition(TimeCondition condition)
+    +void deleteCondition(UUID)
+    +List<TimeCondition> getConditionsByDevice(UUID)
+}
+
+interface DeviceEventConsumer {
+    +DeviceEvent receive()
+}
+
+interface DeviceCommandAdapter {
+    +void execute(Action action)
+}
+
+interface ScenarioEventSendAdapter {
+    +void send(ScenarioEvent event)
+}
+
+interface ScenarioEventConsumer {
+    +ScenarioEvent receive()
+}
+
+interface DeviceStateRepository {
+    +DeviceState getDeviceState(UUID deviceID)
+}
+
+
+
+
+
+'Relations
+AutomationController --> ScenarioOrchestrator: uses
+
+ScenarioEventConsumer --> ScenarioOrchestrator: handle scenario events
+ScenarioOrchestrator --> ScenarioRepository: depends on
+ScenarioOrchestrator --> DeviceStateRepository: depends on
+ScenarioOrchestrator --> CommandExecutor: depends on
+ScenarioOrchestrator --> DeviceCommandAdapter: depends on
+
+ScenarioOrchestrator --> DeviceEventsProcessor: delegates to
+ScenarioOrchestrator --> TimeTriggerProcessor: delegates to
+
+DeviceEventConsumer --> DeviceEventsProcessor: register device event
+DeviceEventsProcessor --> DeviceConditionRepository: manage conditions
+DeviceEventsProcessor --> ScenarioEventSendAdapter: send scenario event
+
+TimeTriggerProcessor --> TimeConditionRepository: manage conditions
+TimeTriggerProcessor --> ScenarioEventSendAdapter: send scenario event
+
+
+
+
+Scenario "1" -- "1..*" Command: has
+
+Command "1" -- "1..*" Action : has
+Command "1" -- "1..*" Condition : has
+
+
+Condition ..|> TimeCondition
+Condition ..|>  DeviceCondition
+
+Action ..|> TurnOnAction
+Action ..|> TurnOffAction
+Action ..|> SetValueAction
+
+
+@enduml

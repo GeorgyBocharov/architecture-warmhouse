@@ -1,0 +1,33 @@
+@startuml DeviceAdapter Component
+title DeviceAdapter Component Diagram
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+
+Container(telemetryService, "Telemetry Service", "Go", "Store device historical data")
+Container(deviceCommandsQueue, "Device Command Message Bus", "Kafka")
+System_Ext(deviceSensor, "Device Sensor")
+
+
+Container(deviceAdapter, "DeviceAdapter") {
+  Component(DeviceController, "DeviceController", "Sends commands to devices, retrieves data")
+  Component(DeviceCommandAdapter, "DeviceCommandAdapter", "Receives commands to be executed")
+  Component(ServiceLayer, "Service Layer", "Business logic")
+  Component(DeviceAdapter, "Device Adapters", "Adapt command fot specific device")
+}
+
+
+Rel(telemetryService, DeviceController, "Get current device state")
+Rel(deviceCommandsQueue, DeviceCommandAdapter, "Commands for devices")
+Rel(DeviceAdapter, deviceSensor, "Send command to device")
+
+
+Rel(DeviceController, ServiceLayer,"Calls business logic")
+Rel(DeviceCommandAdapter, ServiceLayer,"Calls business logic")
+
+Rel(ServiceLayer,DeviceAdapter,"Execute command/receive data")
+
+
+@enduml

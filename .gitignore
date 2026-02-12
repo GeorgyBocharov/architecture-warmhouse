@@ -184,7 +184,7 @@ build/
 **/src/test/**/build/
 
 ### VS Code ###
-.vscode/
+.vscode
 
 ### Mac OS ###
 .DS_Store
@@ -192,3 +192,6 @@ build/
 
 tmp/
 task-*
+
+### MKDOCS sie ###
+docs/site

@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package warmhouse.telemetry.v1;
+
+
+import "google/protobuf/timestamp.proto";
+
+message DeviceTelemetry {
+  string device_id = 1; // required
+
+  repeated SensorData sensor_data = 2;
+  
+  google.protobuf.Timestamp timestamp = 3; // required
+  
+}
+
+
+message SensorData {
+  string id = 1; // required
+  
+  string type = 2; // required
+  
+  string unit = 3; // required
+  
+  int64 value  = 4; // required
+
+}

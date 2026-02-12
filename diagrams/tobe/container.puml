@@ -1,0 +1,144 @@
+@startuml TOBE_WarmhouseContainer
+
+title TOBE Warmhouse Container Diagram 
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+!include DEVICONS/postgresql.puml
+
+Person(user, "User", "Клиент Warmhouse")
+Person(support, "Support", "Поддержка")
+Person(marketing_analyst, "Маркетинговый специалист", "Аналитик")
+
+System(warmhouse, "Warmhouse System", "Экосистема для устройств умного дома")
+
+Container(mobileApp, "Mobile Application", "Kotlin, Swift", "Регистрация, управление устройствами и их подключение")
+Container(supportUI, "Web Application (SPA)", "Node.js", "Интерфейс взаимодействия с обращениями")
+Container(marketing_ui, "Marketing Web Application", "Node.js", "Интерфейс для маркетингово анализа") 
+Container(api_gateway, "API Gateway", "Nginx, KrakenD")
+
+Container_Boundary(warmhouse, "Warmhouse System") {
+    Container(bff, "BFF", "Go")
+    Container(bff_support, "BFF-Support", "Go")
+    Container(bff_marketing, "BFF-Marketing", "Go")
+
+
+    Container(appeals, "Appeals Service", "Go", "управление пользовательскими обращениями")
+    ContainerDb(appeals_db, "Appeals DB", "PostgreSQL", "Хранение обращений, передвижение по статусам")
+
+    Container(user_profile, "User Profile Service", "Go", "Хранение данных пользователя")
+    ContainerDb(user_profile_db, "Users DB", "PostgreSQL", "Хранение данных пользователя, конфигурации нотификаций")
+    Container(notification_service, "Notification Service", "Go", "Уведомление пользователей")
+
+    Container(device_adapter, "Device Adapter", "Go", "Адаптеры для устройств")
+    Container(device_catalog, "Device Catalog", "Go", "Каталог устройств")
+    ContainerDb(device_catalog_db, "Device Catalog DB", "PostgreSQL", "Каталог устройств")
+    Container(device_audit, "Device Audit", "Go", "Сохранение команд пользователя")
+    ContainerDb(device_audit_db, "Audit DB", "Cassandra", "Хранилище действий пользователя")
+    Container(automation, "Automation Service", "Go", "Управление сценариями")
+    ContainerDb(automation_db, "Automation DB", "PostreSQL", "Конфигураци сценариев")
+    Container(device_inventory, "Device Inventory", "Go", "Регистрация/удаление устройств")
+    ContainerDb(device_inventory_db, "Device Inventory DB", "PostgreSQL", "Хранилище устройств", $sprite="postgresql")
+    Container(telemetry_service, "Telemetry Service", "Go", "Сохранение статистики данных устройств")
+    ContainerDb(telemetry_db, "Telemetry DB", "Cassandra", "Хранилище показаний устройств (за месяц)")
+    ContainerDb(telemetry_cache, "Telemetry Cache", "Redis", "Хранение актуальных показаний с устройств")
+
+    Container(device_data_message_bus, "Device Data Message Bus", "Kafka")
+    Container(device_command_message_bus, "Device Command Message Bus", "Kafka")
+
+    Container(vendor_integration, "Vendor Integration", "Go", "Сервис хранения данных (токенов) для взаимодействия")
+    ContainerDb(vendor_integration_db, "Vendor Auth DB", "PostgreSQL", "Сервис хранения вендор токенов")
+
+    Container(product_inventory, "Product Inventory", "Go", "хранение типов продуктов, цен")
+    ContainerDb(product_inventory_db, "Products DB", "PostgreSQL", "Хранилище продуктов")
+    Container(orders_service, "Order Service", "Go", "Мониторинг количества заказов")
+    ContainerDb(orders_db, "Orders DB", "PostgreSQL", "Хранилище заказов")
+}
+
+
+System_Ext(sensor, "Устройство умного дома")
+System_Ext(auth_provider, "Система аутентификации", "Keycloack")
+System_Ext(device_vendor_oauth, "Auth система вендора")
+System_Ext(push_gateway, "Push Gateway", "Firebase Cloud Messaging / Apple Push")
+System_Ext(email_service, "Email Service")
+System_Ext(sms_service, "SMS Service")
+
+' Поддержка вебхуков с устройств
+'System_Ext(device_vendor_servers, "Вендоры устройств")
+
+'Rel(device_vendor_servers, api_gateway, "вебхуки с устройств")
+'Rel(api_gateway, device_adapter, "вебхуки с устройств")
+'Rel(sensor, device_vendor_servers, "вебхуки с устройств")
+
+
+Rel(support, supportUI, "работа с обращениями")
+Rel(supportUI, api_gateway, "работа с обращениями", "REST/HTTPS")
+Rel(api_gateway, bff_support, "мониторинг/решение обращений", "REST/HTTPS")
+Rel(bff_support, appeals, "мониторинг/решение обращений", "gRPC")
+Rel(support, user, "решение обращений")
+
+Rel(user, mobileApp, "регистрация/управление")
+Rel(mobileApp, api_gateway, "управление датчиками, формирование заказов, обращение в поддержку", "REST/HTTPS")
+BiRel(api_gateway, auth_provider, "Аутентификация", "REST/HTTPS")
+Rel(api_gateway, bff, "управление датчиками, формирование заказов, обращение в поддержку", "REST/HTTPS")
+
+
+Rel(bff, appeals, "Создание обращений", "gRPC")
+Rel(bff, orders_service, "формирование заказов", "REST/HTTPS")
+Rel(bff, device_catalog, "получение списка поддерживаемых устройств", "gRPC")
+Rel(device_catalog, device_catalog_db, "сохранение поддерживаемого устройств и их конфиграций", "TCP")
+
+Rel(bff, user_profile, "Сохранение данных пользователя", "gRPC")
+BiRel(user_profile, user_profile_db, "чтение/запись", "TCP")
+
+Rel(bff, device_inventory, "регистрация/удаление/получение списка устройств", "gRPC")
+Rel(bff, telemetry_cache, "получение показаний с устройств/управление", "TCP")
+Rel(bff, automation, "регистрация сценариев", "gRPC")
+Rel(bff, device_audit, "получение данных для аудита", "gRPC")
+Rel(bff, telemetry_service, " получение статистики", "gRPC")
+Rel(bff, vendor_integration, "Запрос Oauth для авторизации у вендора", "REST/HTTPS")
+Rel(bff, device_command_message_bus, "Отправка команд для устройств", "Kafka")
+
+Rel(device_inventory, device_inventory_db, "crud операции с устройствами", "TCP")
+Rel(automation, telemetry_cache, "получение данных", "TCP")
+Rel(automation, device_command_message_bus, "отправка комнад для устройств", "Kafka")
+BiRel(automation, automation_db, "сохранение конфигураций автоматизаций", "TCP")
+
+Rel(device_command_message_bus, device_adapter, "обработка комад", "Kafka")
+Rel(device_adapter, sensor, "управление устройствами, получение показателей, регулярный запрос показателей", "REST/HTTPS")
+Rel(device_adapter, vendor_integration, "получение токенов", "REST/HTTPS")
+Rel(vendor_integration, device_vendor_oauth, "получение access/refresh токенов после аутентификации пользователя", "REST/HTTPS")
+Rel(vendor_integration, vendor_integration_db, "хранение вендор токенов", "TCP")
+
+Rel(device_command_message_bus, device_audit, "сохранение команд для аудита", "Kafka")
+Rel(device_audit, device_audit_db, "сохранение пользовательских команд", "TCP")
+
+
+Rel(telemetry_service, device_adapter, "регулярное получение состояния датчиков", "gRPC")
+Rel(telemetry_service, telemetry_db, "сохранение статистики", "TCP")
+Rel(telemetry_service, telemetry_cache, "сохранение актуальных данных", "TCP")
+Rel(telemetry_service, device_data_message_bus, "отправка данных", "Kafka")
+Rel(device_data_message_bus, automation, "получение событий с датчиков", "Kafka")
+Rel(device_data_message_bus, notification_service, "получение событий с датчиков", "Kafka")
+
+Rel(notification_service, user_profile, "получение конфигов уведомлений", "gRPC")
+Rel(notification_service, push_gateway, "отправка пушей", "REST/HTTPS")
+Rel(notification_service, sms_service, "отпаравка СМС", "REST/HTTPS")
+Rel(notification_service, email_service, "отправка email", "REST/HTTPS")
+
+
+Rel(appeals, appeals_db, "Хранение обращений", "TCP")
+
+Rel(marketing_analyst, marketing_ui, "Анализ продаж, формирование предложений")
+Rel(marketing_ui, api_gateway, "Анализ продаж, формирование предложений", "REST/HTTPS")
+Rel(api_gateway, bff_marketing, "Мониторинг заказов", "REST/HTTPS")
+Rel(bff_marketing, orders_service, "Мониторинг заказов", "gRPC")
+Rel(bff_marketing, product_inventory, "Анализ продуктов/цен/остатков", "gRPC")
+Rel(orders_service, product_inventory, "Получение данных о товарах", "gRPC")
+BiRel(product_inventory, product_inventory_db, "Хранение/Получение продуктов", "TCP")
+BiRel(orders_service, orders_db, "Хранение/Получение заказов", "TCP")
+
+
+
+@enduml
